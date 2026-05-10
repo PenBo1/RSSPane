@@ -1,0 +1,95 @@
+{
+  "extensionName": { "message": "RSSPane" },
+  "extensionDescription": { "message": "A clean local RSS reader browser extension" },
+  "appName": { "message": "RSSPane" },
+  "appDesc": { "message": "A minimal, fast RSS reader extension for your browser" },
+
+  "menuFeeds": { "message": "Feeds" },
+  "menuGeneral": { "message": "General" },
+  "menuImportExport": { "message": "Import/Export" },
+
+  "settingsAppearance": { "message": "Appearance" },
+  "settingsReading": { "message": "Reading" },
+  "settingsFeeds": { "message": "Feeds" },
+  "settingsUpdate": { "message": "Update" },
+  "settingsData": { "message": "Data" },
+  "settingsAbout": { "message": "About" },
+
+  "theme": { "message": "Theme" },
+  "light": { "message": "Light" },
+  "dark": { "message": "Dark" },
+  "system": { "message": "System" },
+  "fontSize": { "message": "Font Size" },
+  "fontSizeSmall": { "message": "Small" },
+  "fontSizeMedium": { "message": "Medium" },
+  "fontSizeLarge": { "message": "Large" },
+
+  "showImages": { "message": "Show Images" },
+  "autoMarkRead": { "message": "Auto Mark Read" },
+  "articleSort": { "message": "Article Sort" },
+  "sortNewest": { "message": "Newest First" },
+  "sortOldest": { "message": "Oldest First" },
+
+  "autoUpdate": { "message": "Auto Update" },
+  "fetchInterval": { "message": "Fetch Interval" },
+  "minutes": { "message": "min" },
+  "maxArticles": { "message": "Max Articles per Feed" },
+
+  "opmlTitle": { "message": "OPML Import/Export" },
+  "opmlDesc": { "message": "OPML is a standard feed exchange format" },
+  "import": { "message": "Import" },
+  "export": { "message": "Export" },
+  "exportArticles": { "message": "Export Articles" },
+  "exportArticlesDesc": { "message": "Export articles to Markdown or HTML" },
+  "exportCount": { "message": "$1 articles", "placeholders": { "count": { "content": "$1" } } },
+  "format": { "message": "Format" },
+  "markdown": { "message": "Markdown" },
+  "html": { "message": "HTML" },
+
+  "clearArticles": { "message": "Clear All Articles" },
+  "clearArticlesDesc": { "message": "Delete all cached articles. Feeds will remain." },
+
+  "filterAll": { "message": "All" },
+  "filterUnread": { "message": "Unread" },
+  "filterStarred": { "message": "Starred" },
+  "markAllRead": { "message": "Mark All Read" },
+
+  "feedsCount": { "message": "feeds" },
+  "articlesCount": { "message": "articles" },
+  "noArticles": { "message": "No articles" },
+  "noFeeds": { "message": "No feeds" },
+
+  "openSettings": { "message": "Settings" },
+  "unknownSource": { "message": "Unknown" },
+  "unread": { "message": "unread" },
+
+  "addFeed": { "message": "Add Feed" },
+  "addFeedDesc": { "message": "Enter RSS or Atom feed URL" },
+  "addFeedSuccess": { "message": "Feed added successfully" },
+  "feedUrlPlaceholder": { "message": "https://example.com/feed.xml" },
+  "validate": { "message": "Validate" },
+  "validationFailed": { "message": "Validation failed" },
+  "addFailed": { "message": "Add failed" },
+  "cancel": { "message": "Cancel" },
+  "add": { "message": "Add" },
+
+  "editFeed": { "message": "Edit Feed" },
+  "editFeedDesc": { "message": "Edit feed title and URL" },
+  "save": { "message": "Save" },
+  "deleteFeed": { "message": "Delete Feed" },
+  "deleteFeedDesc": { "message": "This will delete the feed and all its articles" },
+  "delete": { "message": "Delete" },
+
+  "lastFetched": { "message": "Last fetched" },
+  "never": { "message": "Never" },
+
+  "allFeeds": { "message": "All Feeds" },
+  "searchFeeds": { "message": "Search feeds" },
+  "selectArticle": { "message": "Select an article to read" },
+  "openOriginal": { "message": "Open Original" },
+  "backToList": { "message": "Back to List" },
+  "recentArticles": { "message": "Recent Articles" },
+
+  "refresh": { "message": "Refresh" },
+  "searchArticles": { "message": "Search articles" }
+}

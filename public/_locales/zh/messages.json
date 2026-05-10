@@ -1,0 +1,95 @@
+{
+  "extensionName": { "message": "RSSPane" },
+  "extensionDescription": { "message": "一款纯净本地RSS阅读器浏览器插件" },
+  "appName": { "message": "RSSPane" },
+  "appDesc": { "message": "极简、快速的浏览器RSS阅读器扩展" },
+
+  "menuFeeds": { "message": "订阅源" },
+  "menuGeneral": { "message": "通用设置" },
+  "menuImportExport": { "message": "导入导出" },
+
+  "settingsAppearance": { "message": "外观" },
+  "settingsReading": { "message": "阅读" },
+  "settingsFeeds": { "message": "订阅管理" },
+  "settingsUpdate": { "message": "更新" },
+  "settingsData": { "message": "数据" },
+  "settingsAbout": { "message": "关于" },
+
+  "theme": { "message": "主题" },
+  "light": { "message": "浅色" },
+  "dark": { "message": "深色" },
+  "system": { "message": "跟随系统" },
+  "fontSize": { "message": "字体大小" },
+  "fontSizeSmall": { "message": "小" },
+  "fontSizeMedium": { "message": "中" },
+  "fontSizeLarge": { "message": "大" },
+
+  "showImages": { "message": "显示图片" },
+  "autoMarkRead": { "message": "自动标记已读" },
+  "articleSort": { "message": "文章排序" },
+  "sortNewest": { "message": "最新优先" },
+  "sortOldest": { "message": "最旧优先" },
+
+  "autoUpdate": { "message": "自动更新" },
+  "fetchInterval": { "message": "更新间隔" },
+  "minutes": { "message": "分钟" },
+  "maxArticles": { "message": "每源最大文章数" },
+
+  "opmlTitle": { "message": "OPML导入导出" },
+  "opmlDesc": { "message": "OPML是订阅源通用交换格式" },
+  "import": { "message": "导入" },
+  "export": { "message": "导出" },
+  "exportArticles": { "message": "导出文章" },
+  "exportArticlesDesc": { "message": "将文章导出为Markdown或HTML格式" },
+  "exportCount": { "message": "共$1篇文章", "placeholders": { "count": { "content": "$1" } } },
+  "format": { "message": "格式" },
+  "markdown": { "message": "Markdown" },
+  "html": { "message": "HTML" },
+
+  "clearArticles": { "message": "清空所有文章" },
+  "clearArticlesDesc": { "message": "删除所有缓存文章，订阅源将保留" },
+
+  "filterAll": { "message": "全部文章" },
+  "filterUnread": { "message": "未读" },
+  "filterStarred": { "message": "已收藏" },
+  "markAllRead": { "message": "全部标记已读" },
+
+  "feedsCount": { "message": "订阅源" },
+  "articlesCount": { "message": "篇文章" },
+  "noArticles": { "message": "暂无文章" },
+  "noFeeds": { "message": "暂无订阅源" },
+
+  "openSettings": { "message": "打开设置" },
+  "unknownSource": { "message": "未知来源" },
+  "unread": { "message": "未读" },
+
+  "addFeed": { "message": "添加订阅源" },
+  "addFeedDesc": { "message": "输入RSS或Atom订阅源URL" },
+  "addFeedSuccess": { "message": "订阅源添加成功" },
+  "feedUrlPlaceholder": { "message": "https://example.com/feed.xml" },
+  "validate": { "message": "验证" },
+  "validationFailed": { "message": "验证失败" },
+  "addFailed": { "message": "添加失败" },
+  "cancel": { "message": "取消" },
+  "add": { "message": "添加" },
+
+  "editFeed": { "message": "编辑订阅源" },
+  "editFeedDesc": { "message": "修改订阅源标题和URL" },
+  "save": { "message": "保存" },
+  "deleteFeed": { "message": "删除订阅源" },
+  "deleteFeedDesc": { "message": "此操作将删除订阅源及其所有文章，无法撤销" },
+  "delete": { "message": "删除" },
+
+  "lastFetched": { "message": "上次获取" },
+  "never": { "message": "从未" },
+
+  "allFeeds": { "message": "全部订阅" },
+  "searchFeeds": { "message": "搜索订阅源" },
+  "selectArticle": { "message": "选择文章以阅读" },
+  "openOriginal": { "message": "打开原文" },
+  "backToList": { "message": "返回列表" },
+  "recentArticles": { "message": "最近文章" },
+
+  "refresh": { "message": "刷新" },
+  "searchArticles": { "message": "搜索文章" }
+}
