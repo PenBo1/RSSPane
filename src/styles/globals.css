@@ -143,6 +143,7 @@
 
 /* 文章内容样式 */
 .article-content {
+  font-size: var(--article-font-size, 16px);
   line-height: 1.6;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -157,7 +158,6 @@
 
 .article-content a {
   color: var(--primary);
-  text-decoration: underline;
   word-break: break-all;
 }
 
@@ -240,15 +240,15 @@
   font-weight: 600;
 }
 
-/* 字体大小设置 */
+/* 字体大小设置（仅作用于文章内容） */
 .text-size-small {
-  font-size: 14px;
+  --article-font-size: 14px;
 }
 
 .text-size-medium {
-  font-size: 16px;
+  --article-font-size: 16px;
 }
 
 .text-size-large {
-  font-size: 18px;
+  --article-font-size: 18px;
 }
