@@ -3,7 +3,7 @@
   "description": "A clean local RSS reader browser extension",
   "displayName": "RSSPane",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",

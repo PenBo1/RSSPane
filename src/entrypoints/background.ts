@@ -32,7 +32,7 @@ export default defineBackground(() => {
 
         const newArticles: typeof result.articles = []
         for (const p of result.articles) {
-          if (!await articleRepo.getByGuid(p.guid)) {
+          if (p.guid && !await articleRepo.getByGuid(p.guid)) {
             newArticles.push(p)
           }
         }
@@ -84,7 +84,7 @@ export default defineBackground(() => {
 
   // 点击图标打开侧边栏
   browser.action.onClicked.addListener(tab => {
-    browser.sidePanel.open({ tabId: tab.id })
+    if (tab.id !== undefined) browser.sidePanel.open({ tabId: tab.id })
   })
 
   browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {})

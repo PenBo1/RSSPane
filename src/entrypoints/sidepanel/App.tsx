@@ -23,6 +23,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useI18n } from '@/lib/i18n'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { getDefaultShortcuts } from '@/lib/shortcuts'
 import { feedRepo, articleRepo, configRepo, getStats } from '@/lib/storage'
 import { fetchFeed, createFeed, createArticle } from '@/lib/feed-parser'
 import type { Feed, Article, ArticleFilter, AppConfig } from '@/types/feed'
@@ -161,6 +163,40 @@ const App = () => {
       markRead(article.id)
     }
   }, [config, markRead])
+
+  // 键盘快捷键
+  useKeyboardShortcuts(
+    config?.shortcuts || getDefaultShortcuts(),
+    {
+      onNextArticle: () => {
+        const currentIndex = filteredArticles.findIndex(a => a.id === selectedArticle?.id)
+        const nextIndex = currentIndex < filteredArticles.length - 1 ? currentIndex + 1 : 0
+        if (filteredArticles[nextIndex]) selectArticle(filteredArticles[nextIndex])
+      },
+      onPrevArticle: () => {
+        const currentIndex = filteredArticles.findIndex(a => a.id === selectedArticle?.id)
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : filteredArticles.length - 1
+        if (filteredArticles[prevIndex]) selectArticle(filteredArticles[prevIndex])
+      },
+      onOpenArticle: () => {
+        if (selectedArticle) openExternal(selectedArticle)
+      },
+      onToggleStar: () => {
+        if (selectedArticle) toggleStar(selectedArticle.id)
+      },
+      onToggleRead: () => {
+        if (selectedArticle) markRead(selectedArticle.id)
+      },
+      onRefreshFeeds: refresh,
+      onFocusSearch: () => {
+        const input = document.querySelector<HTMLInputElement>('input[placeholder]')
+        input?.focus()
+      },
+      onGoBack: () => {
+        if (selectedArticle) setSelectedArticle(null)
+      },
+    }
+  )
 
   // 文章详情视图
   if (selectedArticle) {

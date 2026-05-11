@@ -174,7 +174,17 @@ const parseJsonFeed = (json: unknown, url: string): {
   }
 
   const articles: Partial<Article>[] = []
-  (data.items || []).forEach(item => {
+  const items = data.items || [] as Array<{
+    title?: string
+    url?: string
+    content_text?: string
+    content_html?: string
+    summary?: string
+    image?: string
+    date_published?: string
+    id?: string
+  }>
+  items.forEach((item) => {
     if (!item.url) return
 
     // 获取完整内容
@@ -231,13 +241,13 @@ export const fetchFeed = async (
   url: string,
   etag?: string,
   lastModified?: string
-): {
+): Promise<{
   feed: Partial<Feed>
   articles: Partial<Article>[]
   etag?: string
   lastModified?: string
   status: number
-} => {
+}> => {
   const headers: Record<string, string> = {
     Accept: 'application/rss+xml, application/atom+xml, application/json, text/xml, */*',
   }
@@ -278,6 +288,7 @@ export const createFeed = (parsed: Partial<Feed>, url: string): Feed => ({
   updateInterval: 30,
   errorCount: 0,
   createdAt: Date.now(),
+  category: parsed.category || undefined,
 })
 
 // 创建Article对象
@@ -297,12 +308,12 @@ export const createArticle = (parsed: Partial<Article>, feedId: string): Article
 })
 
 // 验证Feed URL
-export const validateFeedUrl = async (url: string): {
+export const validateFeedUrl = async (url: string): Promise<{
   valid: boolean
   title?: string
   articlesCount?: number
   error?: string
-} => {
+}> => {
   try {
     const result = await fetchFeed(url)
     return {

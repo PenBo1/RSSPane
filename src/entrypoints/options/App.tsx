@@ -29,16 +29,18 @@ import {
   PlusIcon,
   LoaderIcon,
   SunIcon,
-  MonitorIcon,
   RefreshCwIcon,
-  DownloadIcon,
+  KeyboardIcon,
+  BookOpenIcon,
+  InfoIcon,
+  DatabaseIcon,
 } from 'lucide-react'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { getDefaultShortcuts } from '@/lib/shortcuts'
 import { useI18n } from '@/lib/i18n'
-import { feedRepo, articleRepo, configRepo, getStats } from '@/lib/storage'
+import { feedRepo, articleRepo, configRepo } from '@/lib/storage'
 import { fetchFeed, createFeed, createArticle } from '@/lib/feed-parser'
-import { parseOpml, generateOpml, downloadFile, readLocalFile } from '@/lib/opml'
-import { exportArticles } from '@/lib/export'
-import type { Feed, Article, AppConfig, ArticleFilter, SettingsMenu, ExportFormat } from '@/types/feed'
+import type { Feed, Article, AppConfig, ArticleFilter, SettingsMenu } from '@/types/feed'
 
 const App = () => {
   const { t } = useI18n()
@@ -47,7 +49,14 @@ const App = () => {
   const [feeds, setFeeds] = useState<Feed[]>([])
   const [articles, setArticles] = useState<Article[]>([])
   const [config, setConfig] = useState<AppConfig | null>(null)
-  const [stats, setStats] = useState({ feedsCount: 0, articlesCount: 0, unreadCount: 0, starredCount: 0 })
+
+  // 统计数据（从 articles 派生，保证一致性）
+  const stats = useMemo(() => ({
+    feedsCount: feeds.length,
+    articlesCount: articles.length,
+    unreadCount: articles.filter(a => !a.isRead).length,
+    starredCount: articles.filter(a => a.isStarred).length,
+  }), [feeds, articles])
 
   // 视图状态
   const [view, setView] = useState<'reader' | 'settings'>('reader')
@@ -61,6 +70,14 @@ const App = () => {
   // Dialog
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
+  const [deleteFeedTarget, setDeleteFeedTarget] = useState<Feed | null>(null)
+  const [editFeedTarget, setEditFeedTarget] = useState<Feed | null>(null)
+  const [editFeedTitle, setEditFeedTitle] = useState('')
+  const [editFeedUrl, setEditFeedUrl] = useState('')
+  const [categories, setCategories] = useState<string[]>([])
+  const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryFeedId, setNewCategoryFeedId] = useState<string | null>(null)
 
   // 表单
   const [feedUrl, setFeedUrl] = useState('')
@@ -73,7 +90,7 @@ const App = () => {
     const allFeeds = await feedRepo.getAll()
     setFeeds(allFeeds)
     setArticles(await articleRepo.getAll())
-    setStats(await getStats())
+    setCategories(await feedRepo.getCategories())
     const cfg = await configRepo.get()
     setConfig(cfg)
 
@@ -160,36 +177,60 @@ const App = () => {
     setAdding(false)
   }, [feedUrl, load, t])
 
-  // 导入OPML
-  const importOpml = useCallback(async () => {
-    try {
-      const content = await readLocalFile('.opml,.xml')
-      const parsedFeeds = parseOpml(content)
-
-      for (const { url, title } of parsedFeeds) {
-        try {
-          const result = await fetchFeed(url)
-          const feed = createFeed({ ...result.feed, title }, url)
-          await feedRepo.add(feed)
-          const newArticles = result.articles.map(p => createArticle(p, feed.id))
-          if (newArticles.length) await articleRepo.addBatch(newArticles)
-        } catch { /* skip */ }
-      }
-      await load()
-    } catch { /* ignore */ }
-  }, [load])
-
-  // 导出OPML
-  const exportOpml = useCallback(() => {
-    downloadFile(generateOpml(feeds), `rsspane-${new Date().toISOString().slice(0, 10)}.opml`)
-  }, [feeds])
-
   // 清空文章
   const clearArticles = useCallback(async () => {
     await articleRepo.clearAll()
     setClearDialogOpen(false)
     await load()
   }, [load])
+
+  // 删除订阅源
+  const deleteFeed = useCallback(async () => {
+    if (!deleteFeedTarget) return
+    await feedRepo.delete(deleteFeedTarget.id)
+    setDeleteFeedTarget(null)
+    if (selectedFeedId === deleteFeedTarget.id) {
+      setSelectedFeedId(null)
+      setSelectedArticle(null)
+    }
+    await load()
+  }, [deleteFeedTarget, selectedFeedId, load])
+
+  // 编辑订阅源
+  const openEditFeed = useCallback((feed: Feed) => {
+    setEditFeedTarget(feed)
+    setEditFeedTitle(feed.title)
+    setEditFeedUrl(feed.url)
+  }, [])
+
+  const saveEditFeed = useCallback(async () => {
+    if (!editFeedTarget || !editFeedTitle.trim()) return
+    await feedRepo.update({ ...editFeedTarget, title: editFeedTitle.trim(), url: editFeedUrl.trim() })
+    setEditFeedTarget(null)
+    await load()
+  }, [editFeedTarget, editFeedTitle, editFeedUrl, load])
+
+  // 移动到分组
+  const moveToCategory = useCallback(async (feedId: string, category: string | undefined) => {
+    await feedRepo.setCategory(feedId, category)
+    await load()
+  }, [load])
+
+  // 新建分组并移动
+  const createCategoryAndMove = useCallback(async () => {
+    if (!newCategoryName.trim() || !newCategoryFeedId) return
+    await feedRepo.setCategory(newCategoryFeedId, newCategoryName.trim())
+    setNewCategoryDialogOpen(false)
+    setNewCategoryName('')
+    setNewCategoryFeedId(null)
+    await load()
+  }, [newCategoryName, newCategoryFeedId, load])
+
+  const openNewCategoryDialog = useCallback((feedId: string) => {
+    setNewCategoryFeedId(feedId)
+    setNewCategoryName('')
+    setNewCategoryDialogOpen(true)
+  }, [])
 
   // 设置主题
   const setTheme = useCallback(async (theme: 'light' | 'dark' | 'system') => {
@@ -235,24 +276,57 @@ const App = () => {
 
   const openExternal = useCallback((article: Article) => window.open(article.link, '_blank'), [])
 
+  // 键盘快捷键
+  useKeyboardShortcuts(
+    config?.shortcuts || getDefaultShortcuts(),
+    {
+      onNextArticle: () => {
+        if (view !== 'reader') return
+        const currentIndex = sortedArticles.findIndex(a => a.id === selectedArticle?.id)
+        const nextIndex = currentIndex < sortedArticles.length - 1 ? currentIndex + 1 : 0
+        if (sortedArticles[nextIndex]) setSelectedArticle(sortedArticles[nextIndex])
+      },
+      onPrevArticle: () => {
+        if (view !== 'reader') return
+        const currentIndex = sortedArticles.findIndex(a => a.id === selectedArticle?.id)
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : sortedArticles.length - 1
+        if (sortedArticles[prevIndex]) setSelectedArticle(sortedArticles[prevIndex])
+      },
+      onOpenArticle: () => {
+        if (selectedArticle) openExternal(selectedArticle)
+      },
+      onToggleStar: () => {
+        if (selectedArticle) toggleStar(selectedArticle.id)
+      },
+      onToggleRead: () => {
+        if (selectedArticle) markRead(selectedArticle.id)
+      },
+      onRefreshFeeds: refresh,
+      onFocusSearch: () => {
+        const input = document.querySelector<HTMLInputElement>('input[placeholder]')
+        input?.focus()
+      },
+      onGoBack: () => {
+        if (selectedArticle) setSelectedArticle(null)
+        else if (view === 'settings') setView('reader')
+      },
+    }
+  )
+
   const markAllRead = useCallback(async () => {
-    await articleRepo.markAllRead(selectedFeedId)
+    await articleRepo.markAllRead(selectedFeedId ?? undefined)
     setArticles(prev => prev.map(a => (selectedFeedId === null || a.feedId === selectedFeedId) ? { ...a, isRead: true } : a))
   }, [selectedFeedId])
 
   // 设置菜单项
   const settingsMenuItems: Array<{ id: SettingsMenu; icon: typeof SunIcon; label: string }> = [
     { id: 'appearance', icon: SunIcon, label: t('settingsAppearance') },
-    { id: 'reading', icon: MonitorIcon, label: t('settingsReading') },
+    { id: 'reading', icon: BookOpenIcon, label: t('settingsReading') },
     { id: 'update', icon: RefreshCwIcon, label: t('settingsUpdate') },
-    { id: 'data', icon: DownloadIcon, label: t('settingsData') },
-    { id: 'about', icon: MonitorIcon, label: t('settingsAbout') },
+    { id: 'data', icon: DatabaseIcon, label: t('settingsData') },
+    { id: 'shortcuts', icon: KeyboardIcon, label: t('settingsShortcuts') },
+    { id: 'about', icon: InfoIcon, label: t('settingsAbout') },
   ]
-
-  // 导出文章
-  const doExportArticles = useCallback((format: ExportFormat) => {
-    exportArticles(articles, feeds, format)
-  }, [articles, feeds])
 
   // 渲染
   return (
@@ -264,7 +338,7 @@ const App = () => {
         selectedArticle={selectedArticle}
         feedSearchQuery={feedSearchQuery}
         articleFilter={articleFilter}
-        config={config || { theme: 'system', fontSize: 'medium', language: 'zh', articleSort: 'newest', showImages: true, autoMarkRead: true, fetchInterval: 30, maxArticlesPerFeed: 500, autoUpdate: true, keepDays: 30 }}
+        config={config || { theme: 'system', fontSize: 'medium', language: 'zh', articleSort: 'newest', showImages: true, autoMarkRead: true, fetchInterval: 30, maxArticlesPerFeed: 500, autoUpdate: true, keepDays: 30, shortcuts: {} }}
         stats={stats}
         feedUnreadCounts={feedUnreadCounts}
         sidebarCollapsed={sidebarCollapsed}
@@ -281,6 +355,11 @@ const App = () => {
         onOpenExternal={openExternal}
         onMarkAllRead={markAllRead}
         onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+        onEditFeed={openEditFeed}
+        onDeleteFeed={feed => setDeleteFeedTarget(feed)}
+        categories={categories}
+        onMoveToCategory={moveToCategory}
+        onNewCategory={openNewCategoryDialog}
       >
         {view === 'settings' && (
           <>
@@ -313,14 +392,9 @@ const App = () => {
                 <SettingsPanel
                   menu={settingsMenu}
                   config={config}
-                  feedsCount={feeds.length}
-                  articlesCount={articles.length}
                   stats={stats}
                   onThemeChange={setTheme}
                   onConfigUpdate={updateConfig}
-                  onImportOpml={importOpml}
-                  onExportOpml={exportOpml}
-                  onExportArticles={doExportArticles}
                   onClearArticles={() => setClearDialogOpen(true)}
                 />
               )}
@@ -366,6 +440,65 @@ const App = () => {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 删除订阅源确认 */}
+      <AlertDialog open={!!deleteFeedTarget} onOpenChange={open => { if (!open) setDeleteFeedTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteFeed')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('deleteFeedDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-end gap-2">
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteFeed}>{t('delete')}</AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 编辑订阅源 */}
+      <Dialog open={!!editFeedTarget} onOpenChange={open => { if (!open) setEditFeedTarget(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('editFeed')}</DialogTitle>
+            <DialogDescription>{t('editFeedDesc')}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <Input
+              placeholder={t('feedTitle')}
+              value={editFeedTitle}
+              onChange={e => setEditFeedTitle(e.target.value)}
+            />
+            <Input
+              placeholder={t('feedUrlPlaceholder')}
+              value={editFeedUrl}
+              onChange={e => setEditFeedUrl(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditFeedTarget(null)}>{t('cancel')}</Button>
+            <Button onClick={saveEditFeed} disabled={!editFeedTitle.trim()}>{t('save')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 新建分组 */}
+      <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('newGroup')}</DialogTitle>
+          </DialogHeader>
+          <Input
+            placeholder={t('groupName')}
+            value={newCategoryName}
+            onChange={e => setNewCategoryName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && createCategoryAndMove()}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewCategoryDialogOpen(false)}>{t('cancel')}</Button>
+            <Button onClick={createCategoryAndMove} disabled={!newCategoryName.trim()}>{t('save')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Toaster />
     </>

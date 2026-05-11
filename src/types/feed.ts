@@ -15,6 +15,7 @@ export type Feed = {
   errorCount: number
   lastError?: string
   createdAt: number
+  category?: string
 }
 
 // Article文章
@@ -49,13 +50,18 @@ export type AppConfig = {
   autoUpdate: boolean
   // 数据
   keepDays: number
+  // 快捷键
+  shortcuts: ShortcutConfig
 }
 
 // 文章筛选
 export type ArticleFilter = 'all' | 'unread' | 'starred'
 
+// 快捷键配置: action ID -> key combo string
+export type ShortcutConfig = Record<string, string>
+
 // 设置菜单项
-export type SettingsMenu = 'appearance' | 'reading' | 'update' | 'data' | 'about'
+export type SettingsMenu = 'appearance' | 'reading' | 'update' | 'data' | 'shortcuts' | 'about'
 
 // 导出格式
 export type ExportFormat = 'markdown' | 'html'

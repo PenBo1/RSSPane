@@ -15,7 +15,8 @@ export const isZh = (): boolean => getUILang().startsWith('zh')
 // 获取本地化消息
 export const t = (key: string, subs?: string | string[]): string => {
   try {
-    const msg = browser.i18n.getMessage(key, subs)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const msg = (browser.i18n.getMessage as any)(key, subs)
     return msg || key
   } catch {
     return key

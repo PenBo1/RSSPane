@@ -12,7 +12,6 @@ export default defineConfig({
       'sidePanel',
       'alarms',
       'storage',
-      'contextMenus',
     ],
     host_permissions: ['<all_urls>'],
     icons: {

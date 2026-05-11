@@ -1,6 +1,6 @@
 // ========== 三栏布局 ==========
 
-import { type ReactNode } from 'react'
+import { type ReactNode, useMemo, useState } from 'react'
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +18,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import {
   SettingsIcon,
   SearchIcon,
   BookOpenIcon,
@@ -27,6 +32,8 @@ import {
   PanelRightIcon,
   PanelRightCloseIcon,
   PlusIcon,
+  ChevronRightIcon,
+  FolderIcon,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -66,6 +73,11 @@ type Props = {
   onOpenExternal: (article: Article) => void
   onMarkAllRead: () => void
   onToggleSidebar: () => void
+  onEditFeed?: (feed: Feed) => void
+  onDeleteFeed?: (feed: Feed) => void
+  categories?: string[]
+  onMoveToCategory?: (feedId: string, category: string | undefined) => void
+  onNewCategory?: (feedId: string) => void
   children?: ReactNode
 }
 
@@ -92,6 +104,11 @@ export const ThreeColumnLayout = ({
   onOpenExternal,
   onMarkAllRead,
   onToggleSidebar,
+  onEditFeed,
+  onDeleteFeed,
+  categories,
+  onMoveToCategory,
+  onNewCategory,
   children,
 }: Props) => {
   const { t } = useI18n()
@@ -99,6 +116,31 @@ export const ThreeColumnLayout = ({
   const filteredFeeds = feeds.filter(f =>
     f.title.toLowerCase().includes(feedSearchQuery.toLowerCase())
   )
+
+  // 按分组归类订阅源
+  const groupedFeeds = useMemo(() => {
+    const groups = new Map<string, Feed[]>()
+    const ungrouped: Feed[] = []
+    for (const feed of filteredFeeds) {
+      if (feed.category) {
+        const list = groups.get(feed.category) || []
+        list.push(feed)
+        groups.set(feed.category, list)
+      } else {
+        ungrouped.push(feed)
+      }
+    }
+    return { groups, ungrouped }
+  }, [filteredFeeds])
+
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  const toggleGroup = (name: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev)
+      next.has(name) ? next.delete(name) : next.add(name)
+      return next
+    })
+  }
 
   const filteredArticles = articles
     .filter(a => selectedFeedId === null || a.feedId === selectedFeedId)
@@ -140,7 +182,7 @@ export const ThreeColumnLayout = ({
         <SidebarContent className="overflow-hidden p-2">
           <ScrollArea className="h-full">
             <FeedListItem
-              feed={{ id: 'all', title: t('allFeeds'), url: '' }}
+              feed={{ id: 'all', title: t('allFeeds'), url: '', updateInterval: 0, errorCount: 0, createdAt: 0 }}
               unreadCount={stats.unreadCount}
               isSelected={selectedFeedId === null}
               onSelect={() => {
@@ -149,7 +191,50 @@ export const ThreeColumnLayout = ({
               }}
             />
             <Separator className="my-2" />
-            {filteredFeeds.map(feed => (
+
+            {/* 分组订阅源 */}
+            {Array.from(groupedFeeds.groups.entries()).map(([category, categoryFeeds]) => {
+              const groupUnread = categoryFeeds.reduce((sum, f) => sum + (feedUnreadCounts[f.id] || 0), 0)
+              const isCollapsed = collapsedGroups.has(category)
+              return (
+                <Collapsible key={category} open={!isCollapsed} onOpenChange={() => toggleGroup(category)}>
+                  <div className="flex items-center gap-1 px-2 py-1.5">
+                    <CollapsibleTrigger asChild>
+                      <button className="flex items-center gap-1 flex-1 min-w-0 text-left hover:text-foreground transition-colors">
+                        <ChevronRightIcon className={cn('size-3 text-muted-foreground transition-transform', !isCollapsed && 'rotate-90')} />
+                        <FolderIcon className="size-3.5 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground truncate">{category}</span>
+                        {groupUnread > 0 && (
+                          <Badge variant="secondary" className="text-[10px] ml-auto">{groupUnread}</Badge>
+                        )}
+                      </button>
+                    </CollapsibleTrigger>
+                  </div>
+                  <CollapsibleContent>
+                    {categoryFeeds.map(feed => (
+                      <FeedListItem
+                        key={feed.id}
+                        feed={feed}
+                        unreadCount={feedUnreadCounts[feed.id] || 0}
+                        isSelected={selectedFeedId === feed.id}
+                        onSelect={() => {
+                          onSwitchView('reader')
+                          onSelectFeed(feed.id)
+                        }}
+                        onEdit={onEditFeed ? () => onEditFeed(feed) : undefined}
+                        onDelete={onDeleteFeed ? () => onDeleteFeed(feed) : undefined}
+                        categories={categories}
+                        onMoveToCategory={onMoveToCategory ? (cat) => onMoveToCategory(feed.id, cat) : undefined}
+                        onNewCategory={onNewCategory}
+                      />
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )
+            })}
+
+            {/* 未分组订阅源 */}
+            {groupedFeeds.ungrouped.map(feed => (
               <FeedListItem
                 key={feed.id}
                 feed={feed}
@@ -159,6 +244,11 @@ export const ThreeColumnLayout = ({
                   onSwitchView('reader')
                   onSelectFeed(feed.id)
                 }}
+                onEdit={onEditFeed ? () => onEditFeed(feed) : undefined}
+                onDelete={onDeleteFeed ? () => onDeleteFeed(feed) : undefined}
+                categories={categories}
+                onMoveToCategory={onMoveToCategory ? (cat) => onMoveToCategory(feed.id, cat) : undefined}
+                onNewCategory={onNewCategory}
               />
             ))}
           </ScrollArea>
